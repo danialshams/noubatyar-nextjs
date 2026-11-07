@@ -2,14 +2,14 @@
 import {useEffect,useMemo,useState,type ReactNode,type FormEvent} from "react";
 import Link from "next/link";
 import {useRouter} from "next/navigation";
-import {LayoutDashboard,CalendarDays,CalendarCheck2,Users,Scissors,UserRound,Building2,DoorOpen,ListClock,CreditCard,TicketPercent,BarChart3,Bell,Settings,ShieldCheck,History,Package,MessageSquare,Sun,Menu,X,Plus,Search,Pencil,Trash2,ArrowLeft,ExternalLink,Check,ChevronRight,ChevronLeft,LogOut,RefreshCw,Copy,Clock3,Eye,Wallet,Download,MoreHorizontal,CalendarPlus2} from "lucide-react";
+import {LayoutDashboard,CalendarDays,CalendarCheck2,Users,Scissors,UserRound,Building2,DoorOpen,CreditCard,TicketPercent,BarChart3,Bell,Settings,ShieldCheck,History,Package,MessageSquare,Sun,Menu,X,Plus,Search,Pencil,Trash2,ArrowLeft,ExternalLink,Check,ChevronRight,ChevronLeft,LogOut,RefreshCw,Copy,Clock3,Eye,Wallet,Download,MoreHorizontal,CalendarPlus2} from "lucide-react";
 import {api,post,patch} from "@/lib/client";
 import {persianDate,localTime,todayAt,daysFrom,zonedDate} from "@/lib/time";
 import AdminBookingDialog from "@/components/AdminBookingDialog";
 
 type Row=Record<string,any>;
 const nav:[string,string,ReactNode][]=[
-  ["dashboard","نمای کلی",<LayoutDashboard/>],["calendar","تقویم",<CalendarDays/>],["appointments","نوبت‌ها",<CalendarCheck2/>],["customers","مشتریان",<Users/>],["services","خدمات",<Scissors/>],["staff","متخصصان",<UserRound/>],["branches","شعب",<Building2/>],["resources","منابع و اتاق‌ها",<DoorOpen/>],["waitlist","لیست انتظار",<ListClock/>],["payments","پرداخت‌ها",<CreditCard/>],["coupons","تخفیف‌ها",<TicketPercent/>],["packages","بسته‌ها",<Package/>],["customerPackages","بسته‌های مشتریان",<Package/>],["creditTransactions","تراکنش اعتبار",<Wallet/>],["packageUsages","مصرف بسته‌ها",<Check/>],["reports","گزارش‌ها",<BarChart3/>],["notifications","اعلان‌ها",<Bell/>],["feedback","نظرات",<MessageSquare/>],["team","تیم و دسترسی",<ShieldCheck/>],["timeOff","مرخصی‌ها",<Sun/>],["holidays","تعطیلات",<CalendarDays/>],["outbox","صف پیامک و ایمیل",<Bell/>],["audit","تاریخچه تغییرات",<History/>],["settings","تنظیمات",<Settings/>]
+  ["dashboard","نمای کلی",<LayoutDashboard/>],["calendar","تقویم",<CalendarDays/>],["appointments","نوبت‌ها",<CalendarCheck2/>],["customers","مشتریان",<Users/>],["services","خدمات",<Scissors/>],["staff","متخصصان",<UserRound/>],["branches","شعب",<Building2/>],["resources","منابع و اتاق‌ها",<DoorOpen/>],["waitlist","لیست انتظار",<Clock3/>],["payments","پرداخت‌ها",<CreditCard/>],["coupons","تخفیف‌ها",<TicketPercent/>],["packages","بسته‌ها",<Package/>],["customerPackages","بسته‌های مشتریان",<Package/>],["creditTransactions","تراکنش اعتبار",<Wallet/>],["packageUsages","مصرف بسته‌ها",<Check/>],["reports","گزارش‌ها",<BarChart3/>],["notifications","اعلان‌ها",<Bell/>],["feedback","نظرات",<MessageSquare/>],["team","تیم و دسترسی",<ShieldCheck/>],["timeOff","مرخصی‌ها",<Sun/>],["holidays","تعطیلات",<CalendarDays/>],["outbox","صف پیامک و ایمیل",<Bell/>],["audit","تاریخچه تغییرات",<History/>],["settings","تنظیمات",<Settings/>]
 ];
 const titles=Object.fromEntries(nav.map(([id,title])=>[id,title]));
 const topNav=nav.slice(0,15);
@@ -67,7 +67,7 @@ export default function AdminShell({section,org,user}:{section:string;org:{name:
  useEffect(()=>{if(section==="calendar")void load();},[calendarDate]);
  const refresh=()=>{void load();};
  const refLoad=async()=>{const names=["branches","services","resources","staff","appointments","customers"];const results=await Promise.all(names.map(async n=>{try{return (await api<{items:Row[]}>(`/api/admin/${n}?limit=250`)).items;}catch{return [];}}));setRefs(Object.fromEntries(names.map((n,i)=>[n,results[i]])));};
- function begin(row?:Row){const record=row?{...row}:{capacity:1,duration:30,price:0,sessions:1,kind:"percent",value:10};if(row)for(const f of fields[section]||[])if(f.type==="datetime-local"&&record[f.name]){const at=new Date(record[f.name]);record[f.name]=todayAt("Asia/Tehran",at)+"T"+localTime(at);}setForm(record);setEditing(row||null);setModal(true);void refLoad();}
+ function begin(row?:Row){const record:Row=row?{...row}:{capacity:1,duration:30,price:0,sessions:1,kind:"percent",value:10};if(row)for(const f of fields[section]||[])if(f.type==="datetime-local"&&record[f.name]){const at=new Date(record[f.name]);record[f.name]=todayAt("Asia/Tehran",at)+"T"+localTime(at);}setForm(record);setEditing(row||null);setModal(true);void refLoad();}
  async function save(e:FormEvent){e.preventDefault();setSaving(true);setError("");try{
    const values={...form};delete values.id;delete values.orgId;delete values.createdAt;delete values.updatedAt;delete values.used;delete values.publicToken;
    for(const f of fields[section]||[]){if(f.type==="number"&&values[f.name]!==""&&values[f.name]!==undefined)values[f.name]=Number(values[f.name]);if(f.type==="boolean")values[f.name]=Boolean(values[f.name]);if(f.type==="datetime-local"&&values[f.name])values[f.name]=zonedDate(String(values[f.name]).slice(0,10),Number(String(values[f.name]).slice(11,13))*60+Number(String(values[f.name]).slice(14,16)),"Asia/Tehran").toISOString();}
