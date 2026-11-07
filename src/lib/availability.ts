@@ -7,7 +7,7 @@ export interface Schedule {
   branchHours:Array<{weekday:number;opens:string;closes:string;closed:boolean}>;
   staffHours:Array<{staffId:string;weekday:number;starts:string;ends:string;breakStart:string|null;breakEnd:string|null}>;
   holiday:boolean;
-  existing:Array<{staffId:string;resourceId:string|null;blockStart:Date;blockEnd:Date;groupKey:string|null}>;
+  existing:Array<{id?:string;staffId:string;resourceId:string|null;blockStart:Date;blockEnd:Date;groupKey:string|null}>;
   timeoffs:Array<{staffId:string;startsAt:Date;endsAt:Date}>;
 }
 export interface PlanItem {serviceId:string;staffId:string;resourceId:string|null;startsAt:Date;endsAt:Date;blockStart:Date;blockEnd:Date;groupKey:string|null;price:number;deposit:number;}
