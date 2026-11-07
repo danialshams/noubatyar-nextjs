@@ -1,0 +1,332 @@
+generator client {
+  provider = "prisma-client"
+  output = "../src/generated/prisma"
+  moduleFormat = "esm"
+  importFileExtension = "ts"
+}
+datasource db { provider = "postgresql" }
+
+model User {
+  id String @id @default(uuid()) @db.Uuid
+  name String
+  email String @unique
+  passwordHash String
+  active Boolean @default(true)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+model Organization {
+  id String @id @default(uuid()) @db.Uuid
+  slug String @unique
+  name String
+  category String @default("salon")
+  phone String @default("")
+  address String @default("")
+  timezone String @default("Asia/Tehran")
+  accent String @default("#2563eb")
+  bookingEnabled Boolean @default(true)
+  approvalRequired Boolean @default(false)
+  noticeMinutes Int @default(60)
+  bookAheadDays Int @default(60)
+  cancellationHours Int @default(24)
+  depositPercent Int @default(0)
+  cancellationPolicy String @default("لغو تا ۲۴ ساعت پیش از نوبت امکان‌پذیر است")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+model Membership {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  userId String @db.Uuid
+  role String @default("owner")
+  staffId String? @db.Uuid
+  @@unique([orgId,userId])
+  @@index([userId])
+}
+model Branch {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  name String
+  address String @default("")
+  phone String @default("")
+  active Boolean @default(true)
+  @@index([orgId])
+}
+model BranchHours {
+  id String @id @default(uuid()) @db.Uuid
+  branchId String @db.Uuid
+  weekday Int
+  opens String @default("09:00")
+  closes String @default("19:00")
+  closed Boolean @default(false)
+  @@unique([branchId,weekday])
+}
+model Holiday {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  branchId String @db.Uuid
+  date String
+  reason String @default("تعطیل")
+  @@unique([branchId,date])
+}
+model Resource {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  branchId String @db.Uuid
+  name String
+  kind String @default("room")
+  active Boolean @default(true)
+  @@index([orgId])
+}
+model Service {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  name String
+  description String @default("")
+  category String @default("عمومی")
+  duration Int @default(30)
+  price Int @default(0)
+  deposit Int @default(0)
+  bufferBefore Int @default(0)
+  bufferAfter Int @default(0)
+  capacity Int @default(1)
+  resourceId String? @db.Uuid
+  active Boolean @default(true)
+  public Boolean @default(true)
+  @@index([orgId])
+}
+model Staff {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  branchId String @db.Uuid
+  name String
+  slug String
+  title String @default("متخصص")
+  phone String @default("")
+  active Boolean @default(true)
+  priority Int @default(0)
+  bufferBefore Int @default(0)
+  bufferAfter Int @default(0)
+  @@unique([orgId,slug])
+  @@index([branchId])
+}
+model StaffService {
+  staffId String @db.Uuid
+  serviceId String @db.Uuid
+  @@id([staffId,serviceId])
+}
+model StaffHours {
+  id String @id @default(uuid()) @db.Uuid
+  staffId String @db.Uuid
+  weekday Int
+  starts String @default("09:00")
+  ends String @default("18:00")
+  breakStart String?
+  breakEnd String?
+  @@unique([staffId,weekday])
+}
+model TimeOff {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  staffId String @db.Uuid
+  startsAt DateTime @db.Timestamptz(3)
+  endsAt DateTime @db.Timestamptz(3)
+  note String @default("مرخصی")
+  @@index([staffId,startsAt])
+}
+model Customer {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  name String
+  phone String
+  email String @default("")
+  notes String @default("")
+  credit Int @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@unique([orgId,phone])
+}
+model Recurring {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  frequency String @default("weekly")
+  total Int @default(1)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+model Appointment {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  branchId String @db.Uuid
+  serviceId String @db.Uuid
+  staffId String @db.Uuid
+  customerId String @db.Uuid
+  resourceId String? @db.Uuid
+  startsAt DateTime @db.Timestamptz(3)
+  endsAt DateTime @db.Timestamptz(3)
+  blockStart DateTime @db.Timestamptz(3)
+  blockEnd DateTime @db.Timestamptz(3)
+  status String @default("confirmed")
+  source String @default("online")
+  notes String @default("")
+  price Int @default(0)
+  depositRequired Int @default(0)
+  discount Int @default(0)
+  couponId String? @db.Uuid
+  publicToken String @unique @default(uuid())
+  groupKey String?
+  bookingRef String? @db.Uuid
+  seriesId String? @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  updatedAt DateTime @updatedAt @db.Timestamptz(3)
+  @@index([orgId,startsAt,status])
+  @@index([orgId,bookingRef])
+  @@index([staffId,blockStart,blockEnd])
+  @@index([resourceId,blockStart,blockEnd])
+}
+model AppointmentEvent {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  appointmentId String @db.Uuid
+  actorId String? @db.Uuid
+  action String
+  details Json @default("{}")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([orgId,appointmentId])
+}
+model Waitlist {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  branchId String @db.Uuid
+  serviceId String @db.Uuid
+  customerName String
+  phone String
+  preferredDate String
+  status String @default("waiting")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([orgId])
+}
+model Coupon {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  code String
+  kind String @default("percent")
+  value Int
+  minAmount Int @default(0)
+  maxUses Int?
+  used Int @default(0)
+  expiresAt DateTime? @db.Timestamptz(3)
+  active Boolean @default(true)
+  @@unique([orgId,code])
+}
+model Payment {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  appointmentId String @db.Uuid
+  amount Int
+  method String @default("cash")
+  status String @default("paid")
+  providerRef String?
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([orgId,createdAt])
+}
+model Notification {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  kind String
+  title String
+  body String @default("")
+  channel String @default("in_app")
+  state String @default("delivered")
+  read Boolean @default(false)
+  outboxId String? @unique @db.Uuid
+  dueAt DateTime? @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([orgId,read,createdAt])
+}
+model Audit {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  userId String? @db.Uuid
+  action String
+  objectType String
+  objectId String? @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([orgId,createdAt])
+}
+model RateLimit {
+  key String @id
+  windowStart DateTime @db.Timestamptz(3)
+  hits Int @default(0)
+}
+model Package {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  name String
+  description String @default("")
+  serviceId String @db.Uuid
+  sessions Int
+  price Int
+  expiresDays Int @default(180)
+  active Boolean @default(true)
+  @@index([orgId])
+}
+model CustomerPackage {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  customerId String @db.Uuid
+  packageId String @db.Uuid
+  remaining Int
+  expiresAt DateTime @db.Timestamptz(3)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+model Feedback {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  appointmentId String @unique @db.Uuid
+  rating Int
+  comment String @default("")
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+model Outbox {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  appointmentId String @db.Uuid
+  channel String
+  eventType String
+  status String @default("requires_provider")
+  dueAt DateTime @db.Timestamptz(3)
+  attempts Int @default(0)
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+}
+
+model TeamInvite {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  email String
+  role String
+  staffId String? @db.Uuid
+  tokenHash String @unique
+  expiresAt DateTime @db.Timestamptz(3)
+  usedAt DateTime? @db.Timestamptz(3)
+  createdBy String @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([orgId,createdAt])
+}
+
+model CreditTransaction {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  customerId String @db.Uuid
+  change Int
+  balanceAfter Int
+  note String @default("")
+  actorId String @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([orgId,customerId,createdAt])
+}
+model PackageUsage {
+  id String @id @default(uuid()) @db.Uuid
+  orgId String @db.Uuid
+  customerPackageId String @db.Uuid
+  appointmentId String @unique @db.Uuid
+  actorId String @db.Uuid
+  createdAt DateTime @default(now()) @db.Timestamptz(3)
+  @@index([orgId,customerPackageId])
+}

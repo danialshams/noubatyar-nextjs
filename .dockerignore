@@ -1,0 +1,10 @@
+node_modules
+.next
+.git
+.env
+.env.*.local
+*.zip
+*.tgz
+*.log
+coverage
+src/generated/prisma
