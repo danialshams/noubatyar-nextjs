@@ -46,7 +46,7 @@ export async function createBooking(orgId:string,input:BookingInput,source:"onli
     // Serialize by all staff/resource keys; ensure stable lock order to avoid deadlocks.
     const srv=await tx.service.findMany({where:{orgId,id:{in:data.serviceIds}}});
     const keys=[`staff:${data.staffId||"auto"}`, ...srv.filter(s=>s.resourceId).map(s=>`resource:${s.resourceId}`)].sort();
-    for(const key of keys)await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
+    for(const key of keys)await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
     const sched=await scheduleDataInTx(tx,orgId,data.branchId,data.serviceIds,data.date,data.staffId);
     if(source==="admin")sched.org={...sched.org,bookingEnabled:true};
     const options=data.staffId?[data.staffId]:sched.staff.map(x=>x.id);
@@ -54,7 +54,7 @@ export async function createBooking(orgId:string,input:BookingInput,source:"onli
     for(const sid of options){const proposal=planAt(sched,sid,data.date,hminutes(data.time));if(proposal){staffId=sid;plan=proposal;break;}}
     if(!staffId||!plan)throw new AppError(409,"این زمان دیگر آزاد نیست");
     // For auto assignment obtain staff lock too and reload busy rows under lock.
-    if(!data.staffId){await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${`staff:${staffId}`}))`; const current=await tx.appointment.findMany({where:{orgId,status:{in:ACTIVE},blockStart:{lt:plan[plan.length-1].blockEnd},blockEnd:{gt:plan[0].blockStart}}}); const s2={...sched,existing:current};plan=planAt(s2,staffId,data.date,hminutes(data.time));if(!plan)throw new AppError(409,"این زمان دیگر آزاد نیست");}
+    if(!data.staffId){await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${`staff:${staffId}`}))`; const current=await tx.appointment.findMany({where:{orgId,status:{in:ACTIVE},blockStart:{lt:plan[plan.length-1].blockEnd},blockEnd:{gt:plan[0].blockStart}}}); const s2={...sched,existing:current};plan=planAt(s2,staffId,data.date,hminutes(data.time));if(!plan)throw new AppError(409,"این زمان دیگر آزاد نیست");}
     const phone=data.phone.replace(/^(?:\+?98)/,"0");
     const customer=await tx.customer.upsert({where:{orgId_phone:{orgId,phone}},create:{orgId,name:data.name,phone,email:data.email||""},update:{email:data.email||undefined}});
     let couponId:string|undefined,discount=0;
@@ -101,7 +101,7 @@ export async function rescheduleBooking(orgId:string,appointmentId:string,day:st
     const ids=original.map(a=>a.serviceId);
     const services=await tx.service.findMany({where:{orgId,id:{in:ids}}});
     const keys=[...new Set([`staff:${sid}`,...original.map(a=>`staff:${a.staffId}`),...services.filter(s=>s.resourceId).map(s=>`resource:${s.resourceId}`)])].sort();
-    for(const key of keys)await tx.$queryRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
+    for(const key of keys)await tx.$executeRaw`SELECT pg_advisory_xact_lock(hashtext(${key}))`;
     const sched=await scheduleDataInTx(tx,orgId,first.branchId,ids,day,sid);
     // Own current slots are not conflicts while moving the same reservation.
     sched.existing=sched.existing.filter(a=>!original.some(old=>old.id===a.id));
