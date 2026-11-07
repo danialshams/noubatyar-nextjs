@@ -42,6 +42,7 @@ export async function createBooking(orgId:string,input:BookingInput,source:"onli
   const data=bookingSchema.parse({...input,phone:normalizeIranMobile(input.phone)});
   const org=await db.organization.findUnique({where:{id:orgId}});if(!org)throw new AppError(404,"کسب‌وکار یافت نشد");
   if(!org.bookingEnabled&&source==="online")throw new AppError(403,"رزرو آنلاین غیرفعال است");
+  for(let attempt=0;attempt<4;attempt++){
   try{return await db.$transaction(async tx=>{
     // Serialize by all staff/resource keys; ensure stable lock order to avoid deadlocks.
     const srv=await tx.service.findMany({where:{orgId,id:{in:data.serviceIds}}});
@@ -69,7 +70,14 @@ export async function createBooking(orgId:string,input:BookingInput,source:"onli
     }
     return {ids:bookingIds,bookingRef,token,total:plan.reduce((s,p)=>s+p.price,0),discount,status};
   },{isolationLevel:Prisma.TransactionIsolationLevel.Serializable,timeout:15000,maxWait:10000});
-  }catch(e){if(e instanceof AppError)throw e;if(isBookingCollision(e))throw new AppError(409,"این زمان دیگر آزاد نیست");throw e;}
+  }catch(e){
+    if((e as {code?:string})?.code==="P2034" && attempt<3)continue;
+    if(e instanceof AppError)throw e;
+    if(isBookingCollision(e))throw new AppError(409,"این زمان دیگر آزاد نیست");
+    throw e;
+  }
+  }
+  throw new AppError(409,"درخواست رزرو هم‌زمان با درخواست دیگری بود؛ دوباره تلاش کنید");
 }
 // Same connection must be used inside the transaction; never load availability on a different connection.
 async function scheduleDataInTx(tx:Prisma.TransactionClient,orgId:string,branchId:string,serviceIds:string[],date:string,staffId?:string):Promise<Schedule>{
