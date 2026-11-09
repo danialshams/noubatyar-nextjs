@@ -33,3 +33,46 @@
 
 /* Public, read-only showcase */
 .demo-notice{border:1px solid #c9ddff;border-radius:13px;background:#eff6ff;color:#24477d;padding:13px 17px;margin-bottom:20px;font-size:12px;line-height:1.9}.demo-notice span{font-weight:900;background:#dbeafe;color:#1d4ed8;border-radius:7px;padding:3px 8px;margin-left:6px}.demo-public-note{color:#64748b;font-size:12px;max-width:520px;margin:25px auto 0}.demo-notice+div{margin-top:0}
+
+
+/* Guided customer booking — subtle motion, compact mobile ergonomics. */
+.booking-step-meta{max-width:780px;margin:0 auto 9px;display:flex;align-items:center;justify-content:space-between;gap:12px;color:#71819b;font-size:12px}
+.booking-step-meta strong{color:#3455c2;font-size:12px}
+.booking-progress{max-width:780px;height:5px;margin:0 auto 25px;background:#e6ecfb;border-radius:99px;overflow:hidden;position:relative}
+.booking-progress>span{height:100%;display:block;border-radius:inherit;background:linear-gradient(90deg,#7899fa,#315fee);transition:width .38s cubic-bezier(.2,.75,.3,1)}
+.booking-stage{animation:booking-stage-enter .35s cubic-bezier(.22,.72,.18,1) both}
+@keyframes booking-stage-enter{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}
+.booking-coach{display:flex;align-items:flex-start;gap:10px;padding:13px 14px;margin-bottom:22px;border-radius:13px;background:linear-gradient(110deg,#f1f5ff,#f8fbff);border:1px solid #e1e9ff;color:#4d648c;font-size:12px;line-height:1.85}
+.booking-coach svg{color:#4c72e6;margin-top:3px}
+.booking-coach p{margin:0;flex:1}
+.booking-page .selection-card{transition:transform .22s ease,box-shadow .22s ease,border-color .22s ease,background-color .22s ease}
+.booking-page .selection-card:hover{transform:translateY(-2px);box-shadow:0 12px 26px -21px #3048a5}
+.booking-page .selection-card.chosen{box-shadow:0 0 0 2px #e9efff,0 11px 23px -18px #315fee66}
+.booking-page .selection-card:active,.booking-page .slots-grid button:active{transform:scale(.99)}
+.booking-page .slots-grid button{transition:transform .18s ease,background .18s ease,color .18s ease,box-shadow .18s ease}
+.booking-page .slots-grid button:hover:not(.active){background:#f3f6ff;border-color:#bdcdfa;transform:translateY(-2px)}
+.booking-page .slots-grid button.active{box-shadow:0 7px 17px -11px #315fee}
+.booking-page .selection-card:focus-visible,.booking-page .slots-grid button:focus-visible,.booking-page .btn:focus-visible{outline:3px solid #98b3ff;outline-offset:3px}
+.booking-page .booking-finish{animation:booking-stage-enter .35s ease-out both}
+.booking-page .preview-icon{background:#eff3ff;color:#4a68d9}
+.demo-preview-receipt{width:100%;display:grid;gap:13px;text-align:right;background:#f7f9fe;border:1px solid #e4e9f7;border-radius:15px;padding:20px;max-width:480px}
+.demo-preview-receipt>div{display:flex;align-items:center;gap:10px;color:#475674;font-size:13px}
+.demo-preview-receipt>div>svg{color:#6886e1}
+.demo-preview-receipt .receipt-price{padding-top:12px;border-top:1px solid #e1e7f3;justify-content:space-between}
+.demo-preview-receipt .receipt-price strong{font-size:16px;color:#315fee}
+.demo-preview-receipt>small{color:#7d8da7;font-size:11px}
+.section-guide{display:flex;gap:12px;align-items:flex-start;background:#f1f5ff;border:1px solid #dfe8ff;border-radius:13px;padding:13px 15px;margin-bottom:19px;color:#506485;font-size:12px;line-height:1.9}
+.section-guide svg{flex:0 0 auto;margin-top:3px;color:#456bd7}
+@media(max-width:620px){
+ .booking-step-meta{padding:0 4px}
+ .booking-progress{margin-bottom:19px}
+ .booking-coach{padding:11px 12px;margin-bottom:18px}
+ .booking-page .selection-card:hover,.booking-page .slots-grid button:hover:not(.active){transform:none;box-shadow:none}
+ .demo-preview-receipt{padding:15px}
+ .section-guide{font-size:11px;line-height:1.9}
+}
+@media(prefers-reduced-motion:reduce){
+ .booking-stage,.booking-page .booking-finish{animation:none!important}
+ .booking-progress>span,.booking-page .selection-card,.booking-page .slots-grid button{transition:none!important}
+ .booking-page .selection-card:hover,.booking-page .slots-grid button:hover:not(.active),.booking-page .selection-card:active,.booking-page .slots-grid button:active{transform:none!important}
+}
